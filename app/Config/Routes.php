@@ -28,7 +28,7 @@ $routes->group('/keranjang', ['filter' => 'auth'], function ($routes) {
 });
 
 $routes->get('/home', 'Home', ['filter' => 'auth']);
-$routes->get('/keranjang', 'TransaksiController::index', ['filter' => 'auth']);
+// $routes->get('/keranjang', 'TransaksiController::index', ['filter' => 'auth']);
 $routes->get('/faq', 'FaqController', ['filter' => 'auth']);
 $routes->get('faq', 'Home::faq', ['filter' => 'auth']);
 $routes->get('profile', 'Home::profile', ['filter' => 'auth']);
