@@ -43,7 +43,7 @@ class ApiController extends ResourceController
         });
 
         if(array_key_exists("Key", $headers)){
-            if ($headers["Key"] == $this->apiKey) {
+            if ($headers["Key"] == $this->apikey) {
                 $penjualan = $this->transaction->findAll();
                 
                 foreach ($penjualan as &$pj) {
