@@ -6,15 +6,18 @@ use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
 
 use App\Models\UserModel;
+use App\Models\DiskonModel;
 
 class AuthController extends BaseController
 {
     protected $user;
+    protected $diskon;
 
     function __construct()
     {
         helper('form');
         $this->user = new UserModel();
+        $this->diskon = new DiskonModel();
     }
     public function login()
     {
@@ -32,11 +35,23 @@ class AuthController extends BaseController
 
                 if ($dataUser) {
                     if (password_verify($password, $dataUser['password'])) {
+                        // Mencari diskon yang ada di hari ini
+                        $today = date('Y-m-d');
+                        $diskonHariIni = $this->diskon->getDiskonByDate($today);;
+
                         session()->set([
                             'username' => $dataUser['username'],
                             'role' => $dataUser['role'],
                             'isLoggedIn' => TRUE
                         ]);
+
+                        //Jika ada diskon di hari ini, maka simpan ke session
+                        if ($diskonHariIni) {
+                            $SessionData['diskon'] = $diskonHariIni['nominal'];
+                            $SessionData['diskon_id'] = $diskonHariIni['id'];
+                        }
+
+                        session()->set($SessionData);
 
                         return redirect()->to(base_url('/'));
                     } else {

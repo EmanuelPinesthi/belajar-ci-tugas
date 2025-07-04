@@ -47,7 +47,15 @@ class ApiController extends ResourceController
                 $penjualan = $this->transaction->findAll();
                 
                 foreach ($penjualan as &$pj) {
-                    $pj['details'] = $this->transaction_detail->where('transaction_id', $pj['id'])->findAll();
+                    $details = $this->transaction_detail->where('transaction_id', $pj['id'])->findAll();
+                    $pj['details'] = $details;
+                    
+                    // Calculate total items purchased
+                    $totalItems = 0;
+                    foreach ($details as $detail) {
+                        $totalItems += $detail['jumlah'];
+                    }
+                    $pj['total_items'] = $totalItems;
                 }
 
                 $data['status'] = ["code" => 200, "description" => "OK"];

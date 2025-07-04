@@ -33,13 +33,26 @@ class TransaksiController extends BaseController
 
     public function cart_add()
     {
+        $harga = $this->request->getPost('harga');
+        
+        // Apply discount if available
+        if (session()->has('diskon')) {
+            $diskon = session()->get('diskon');
+            $harga = max(0, $harga - $diskon); // Ensure price doesn't go below 0
+        }
+
         $this->cart->insert(array(
             'id'        => $this->request->getPost('id'),
             'qty'       => 1,
-            'price'     => $this->request->getPost('harga'),
+            'price'     => $harga,
             'name'      => $this->request->getPost('nama'),
-            'options'   => array('foto' => $this->request->getPost('foto'))
+            'options'   => array(
+                'foto' => $this->request->getPost('foto'),
+                'original_price' => $this->request->getPost('harga'),
+                'discount_applied' => session()->has('diskon') ? session()->get('diskon') : 0
+            )
         ));
+        
         session()->setflashdata('success', 'Produk berhasil ditambahkan ke keranjang. (<a href="' . base_url() . 'keranjang">Lihat</a>)');
         return redirect()->to(base_url('home'));
     }
@@ -100,11 +113,8 @@ class TransaksiController extends BaseController
 
     public function getCost()
     { 
-            //ID lokasi yang dikirimkan dari halaman checkout
         $destination = $this->request->getGet('destination');
 
-            //parameter daerah asal pengiriman, berat produk, dan kurir dibuat statis
-        //valuenya => 64999 : PEDURUNGAN TENGAH , 1000 gram, dan JNE
         $response = $this->client->request(
             'POST', 
             'https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost', [
@@ -155,11 +165,17 @@ class TransaksiController extends BaseController
             $last_insert_id = $this->transaction->getInsertID();
 
             foreach ($this->cart->contents() as $value) {
+                // Calculate discount for this item
+                $diskonAmount = 0;
+                if (session()->has('diskon')) {
+                    $diskonAmount = session()->get('diskon');
+                }
+
                 $dataFormDetail = [
                     'transaction_id' => $last_insert_id,
                     'product_id' => $value['id'],
                     'jumlah' => $value['qty'],
-                    'diskon' => 0,
+                    'diskon' => $diskonAmount,
                     'subtotal_harga' => $value['qty'] * $value['price'],
                     'created_at' => date("Y-m-d H:i:s"),
                     'updated_at' => date("Y-m-d H:i:s")
